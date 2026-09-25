@@ -1,0 +1,46 @@
+topics:
+- name: 新Benchmark发布
+  dimension: benchmark
+  priority: 1
+  queries:
+  - 新发布 大模型 benchmark 评测数据集
+  - new LLM benchmark evaluation dataset released
+- name: 榜单与评测动态
+  dimension: benchmark
+  priority: 1
+  queries:
+  - LLM leaderboard ranking changes latest
+  - 大模型 榜单 排名变化 最新
+  - SWE-bench Verified leaderboard top model ranking
+  - GPQA Diamond leaderboard top score model
+- name: 竞品模型动态
+  dimension: competitor
+  priority: 1
+  queries:
+  - OpenAI Anthropic Google xAI Meta new model release benchmark
+  - 通义 Qwen 豆包 DeepSeek 新模型 发布 评测
+- name: 数据采买与授权
+  dimension: supplier
+  priority: 1
+  queries:
+  - AI training data licensing deal announcement
+  - 大模型 训练数据 采买 合作 供应商
+- name: 供应商动作
+  dimension: supplier
+  priority: 2
+  queries:
+  - data labeling company funding new product announcement
+  - 数据标注 供应商 融资 新业务
+- name: AI人才信号
+  dimension: talent
+  priority: 1
+  queries:
+  - AI lab hires reinforcement learning researcher chief scientist
+  - 大模型 公司 招聘 研究负责人 科学家
+  - site:linkedin.com/posts AI researcher joined OpenAI OR Anthropic OR xAI
+- name: 公众号情报
+  dimension: benchmark
+  priority: 2
+  queries:
+  - site:mp.weixin.qq.com 大模型 评测 benchmark 发布
+  - site:mp.weixin.qq.com AI 数据 供应商 采购

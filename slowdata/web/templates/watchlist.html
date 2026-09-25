@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}关注清单 · 慢数据情报台{% endblock %}
+{% block content %}
+<h1>关注清单（Watchlist）</h1>
+<p class="muted">对应文件：{{ path }}（保存后下次运行生效）</p>
+
+{% for t in topics %}
+<section class="panel">
+  <h2>{{ t.name }} <span class="badge">{{ t.dimension }}</span> <span class="badge">优先级 {{ t.priority }}</span></h2>
+  <table>
+    {% for q in t.queries %}
+    <tr>
+      <td class="title-cell">{{ q }}</td>
+      <td>
+        <form method="post" action="/watchlist/delete" class="inline-form">
+          <input type="hidden" name="topic" value="{{ t.name }}">
+          <input type="hidden" name="query" value="{{ q }}">
+          <button class="danger" type="submit">删除</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  <form method="post" action="/watchlist/add" class="filters">
+    <input type="hidden" name="topic" value="{{ t.name }}">
+    <input type="text" name="query" placeholder="新增检索词（中英文均可）" style="flex:1">
+    <button type="submit">添加</button>
+  </form>
+</section>
+{% endfor %}
+{% endblock %}

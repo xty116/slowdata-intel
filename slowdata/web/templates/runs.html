@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}运行 · 慢数据情报台{% endblock %}
+{% block content %}
+<h1>运行</h1>
+
+<section class="panel">
+  <h2>手动触发</h2>
+  <form method="post" action="/api/runs" class="filters" id="trigger-form">
+    <input type="number" name="max_queries" placeholder="检索上限（留空用默认 12）" min="1" max="20">
+    <button type="submit">🚀 立即运行</button>
+  </form>
+  <p id="run-status" class="muted">当前状态：<span id="run-status-val">{{ snapshot.status }}</span></p>
+  <pre id="run-summary" style="display:none"></pre>
+</section>
+
+<h2>历史记录</h2>
+<table>
+  <tr><th>时间</th><th>状态</th><th>成本</th><th>调用</th><th>输入 tokens</th><th>输出 tokens</th><th>节点明细</th></tr>
+  {% for r in runs %}
+  <tr>
+    <td>{{ r.started }}</td>
+    <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+    <td>${{ r.cost }}</td>
+    <td>{{ r.calls }}</td>
+    <td>{{ r.prompt_tokens }}</td>
+    <td>{{ r.completion_tokens }}</td>
+    <td>
+      {% if r.per_node %}
+      <details>
+        <summary>展开</summary>
+        <table class="nested">
+          <tr><th>节点</th><th>调用</th><th>成本</th></tr>
+          {% for node, v in r.per_node.items() %}
+          <tr><td>{{ node }}</td><td>{{ v.calls }}</td><td>${{ v.cost_usd }}</td></tr>
+          {% endfor %}
+        </table>
+        {% if r.warnings %}
+        <details><summary>告警</summary><ul>{% for w in r.warnings %}<li>{{ w }}</li>{% endfor %}</ul></details>
+        {% endif %}
+        {% if r.error %}<p class="error">{{ r.error }}</p>{% endif %}
+      </details>
+      {% else %}—{% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+
+<script>
+const form = document.getElementById('trigger-form');
+const statusVal = document.getElementById('run-status-val');
+const summaryPre = document.getElementById('run-summary');
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  const res = await fetch('/api/runs', {method: 'POST', body: fd});
+  const data = await res.json();
+  if (!data.started && data.status === 'running') {
+    statusVal.textContent = 'running（已有运行进行中）';
+  }
+  poll();
+});
+async function poll() {
+  const res = await fetch('/api/runs/status');
+  const d = await res.json();
+  statusVal.textContent = d.status;
+  if (d.status === 'running') {
+    summaryPre.style.display = 'block';
+    summaryPre.textContent = '运行中… 开始于 ' + d.started_at;
+    setTimeout(poll, 4000);
+  } else if (d.status === 'done' || d.status === 'failed') {
+    summaryPre.style.display = 'block';
+    summaryPre.textContent = JSON.stringify(d.summary || d.error, null, 2);
+    setTimeout(() => location.reload(), 2500);
+  }
+}
+if ({{ snapshot.status == 'running' }} ) { poll(); }
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+# 慢数据情报 Agent —— MVP 配置
+llm:
+  base_url: https://api.deepseek.com
+  tier_l1: deepseek-chat          # 轻量层：判断/抽取/筛选
+  tier_l2: deepseek-reasoner      # 推理层：综合/方针/探测
+  concurrency: 4
+  max_retries: 4
+  timeout_s: 180
+  daily_budget_usd: 0.5           # 日预算，超 60% 后 L2 节点自动降级 L1
+
+search:
+  backend: tavily
+  max_queries: 12                 # 单次运行检索 query 上限
+  max_results_per_query: 6
+  search_depth: advanced          # basic 更省 credits，advanced 内容更全
+  collect_concurrency: 3
+
+sources:
+  # 信源开关：tavily(全网检索) / papers(OpenAlex 论文，覆盖 arXiv) / github(开源社区) / huggingface(模型生态) / rss(订阅池)
+  enabled: [tavily, papers, github, huggingface, rss]
+  # 时间窗硬约束：仅保留提需时间前 N 天内的资料（prompt 无明确时间要求时的默认值）
+  time_window_days: 7
+  # 无日期条目策略：keep_flagged=保留但标记"时间未知"并降权；drop=直接丢弃
+  undated_policy: keep_flagged
+  # 高重要度条目抓取网页正文（提取正文/表格/内嵌JSON，用于摘要与排行榜数据；榜单类URL优先）
+  fetch_pages: true
+  fetch_max: 25
+  fetch_concurrency: 4
+  # JS 客户端渲染页面的兜底渲染代理（r.jina.ai 免费档即可；置空则禁用）
+  render_proxy: "https://r.jina.ai/"
+
+dedup:
+  embedding_model: Qwen/Qwen3-Embedding-0.6B-Q  # 本地嵌入（量化版，约 1.1GB）
+  cosine_threshold: 0.92          # 余弦相似度 ≥ 此值视为同一事件
+  title_fallback_threshold: 0.85  # 嵌入不可用时的标题相似度兜底
+  cross_run_days: 7               # 与近 N 天存量条目做跨日去重
+
+triage:
+  batch_size: 8
+  min_importance_report: 3        # 进入正文/摘要的条目最低重要度
+  max_clusters_summarized: 16     # 单次运行最多 LLM 摘要的簇数（成本上限）
+
+verify:
+  # Claim 级证据核验：拆解(L1) → 逐条搜证(L1) → 矛盾裁决(L2)
+  min_importance: 4               # 仅核验重要度 ≥ 此值的簇
+  max_clusters: 6                 # 单次运行核验簇数上限
+  max_claims_per_cluster: 3       # 每簇最多拆解断言数
+  search_results: 3               # 每条断言核验检索条数
+  depth: basic                    # 核验检索用 basic（1 credit/次）
+
+critic:
+  # Critic 评审回路（L2 五维打分，含时效性）
+  min_score: 7                    # 任一维度低于此分触发回搜
+  max_rounds: 2                   # 回搜轮数上限
+  max_extra_queries: 4            # 每轮回搜 query 上限
+
+report:
+  output_dir: reports
+  db_path: data/slowdata.db
+
+web:
+  host: 127.0.0.1
+  port: 8000
+
+schedule:
+  enabled: true
+  daily_at: "08:30"     # 每日自动运行时间（本机时区）

@@ -1,0 +1,16 @@
+.venv/
+.env
+__pycache__/
+*.pyc
+data/
+reports/
+.idea/
+.vscode/
+.uv-cache/
+.uv-python/
+.uv-bin/
+.hf-cache/
+.fastembed-cache/
+*.egg-info/
+.DS_Store
+:memory:.ses

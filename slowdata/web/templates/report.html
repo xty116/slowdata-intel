@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}日报 {{ date }} · 慢数据情报台{% endblock %}
+{% block content %}
+<p><a href="/reports">← 返回日报列表</a></p>
+<article class="report">
+{{ content | safe }}
+</article>
+{% endblock %}

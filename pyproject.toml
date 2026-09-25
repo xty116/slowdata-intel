@@ -1,0 +1,30 @@
+[project]
+name = "slowdata"
+version = "0.1.0"
+description = "慢数据情报 Agent —— 大模型数据团队情报采集与沉淀系统（MVP）"
+requires-python = ">=3.12"
+dependencies = [
+    "httpx",
+    "pyyaml",
+    "python-dotenv",
+    "numpy",
+    "fastembed",
+    "langgraph",
+    "feedparser",
+    "fastapi",
+    "uvicorn",
+    "jinja2",
+    "apscheduler",
+    "markdown",
+    "python-multipart",
+]
+
+[project.scripts]
+slowdata = "slowdata.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["slowdata"]

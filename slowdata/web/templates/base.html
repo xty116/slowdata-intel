@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}慢数据情报台{% endblock %}</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="topbar">
+  <span class="brand">🐢 慢数据情报台</span>
+  <nav>
+    <a href="/">概览</a>
+    <a href="/reports">日报</a>
+    <a href="/items">条目</a>
+    <a href="/entities">实体</a>
+    <a href="/watchlist">关注清单</a>
+    <a href="/runs">运行</a>
+  </nav>
+</header>
+<main>
+{% block content %}{% endblock %}
+</main>
+</body>
+</html>

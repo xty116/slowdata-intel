@@ -1,0 +1,10 @@
+# RSS 订阅源清单（feedparser；单个源失败自动跳过不影响整体运行）
+feeds:
+  - name: 机器之心
+    url: https://www.jiqizhixin.com/rss
+  - name: 量子位
+    url: https://www.qbitai.com/feed
+  - name: HackerNews
+    url: https://hnrss.org/frontpage
+  - name: TechCrunch-AI
+    url: https://techcrunch.com/category/artificial-intelligence/feed/

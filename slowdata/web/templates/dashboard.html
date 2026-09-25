@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}概览 · 慢数据情报台{% endblock %}
+{% block content %}
+<h1>概览</h1>
+
+<div class="cards">
+  <div class="card"><div class="num">{{ n_items }}</div><div class="label">条目</div></div>
+  <div class="card"><div class="num">{{ n_entities }}</div><div class="label">实体</div></div>
+  <div class="card"><div class="num">{{ n_events }}</div><div class="label">事件</div></div>
+  <div class="card"><div class="num">{{ n_claims }}</div><div class="label">断言核验</div></div>
+  <div class="card"><div class="num">${{ month_cost }}</div><div class="label">本月 LLM 成本</div></div>
+  <div class="card">
+    <div class="num status-{{ snapshot.status }}">{{ snapshot.status }}</div>
+    <div class="label">当前运行状态</div>
+  </div>
+</div>
+
+<div class="grid2">
+  <section class="panel">
+    <h2>最新运行</h2>
+    {% if latest %}
+      <table>
+        <tr><th>运行ID</th><td>{{ latest[0] }}</td></tr>
+        <tr><th>时间</th><td>{{ latest[1] }}</td></tr>
+        <tr><th>状态</th><td>{{ latest[2] }}</td></tr>
+        <tr><th>成本</th><td>${{ latest_stats.get('cost_usd', 0) }}</td></tr>
+        <tr><th>LLM 调用</th><td>{{ latest_stats.get('calls', 0) }} 次</td></tr>
+      </table>
+      {% if per_source %}
+        <h3>各信源（本次运行）</h3>
+        <table>
+          <tr><th>信源</th><th>条目</th><th>平均重要度</th></tr>
+          {% for src, cnt, avg in per_source %}
+          <tr><td>{{ src }}</td><td>{{ cnt }}</td><td>{{ avg }}</td></tr>
+          {% endfor %}
+        </table>
+      {% endif %}
+    {% else %}
+      <p class="muted">还没有运行记录，去 <a href="/runs">运行</a> 页手动触发一次。</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>最近日报</h2>
+    {% if reports %}
+      <ul class="linklist">
+        {% for d in reports %}<li><a href="/reports/{{ d }}">{{ d }}</a></li>{% endfor %}
+      </ul>
+    {% else %}
+      <p class="muted">暂无日报。</p>
+    {% endif %}
+    <h2>最近运行记录</h2>
+    <table>
+      <tr><th>时间</th><th>状态</th><th>成本</th></tr>
+      {% for r in recent %}
+      <tr>
+        <td>{{ r.at }}</td>
+        <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+        <td>${{ r.cost }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </section>
+</div>
+{% endblock %}

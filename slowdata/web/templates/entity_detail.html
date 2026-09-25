@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}{{ ent[1] }} · 实体档案{% endblock %}
+{% block content %}
+<p><a href="/entities">← 返回实体列表</a></p>
+<h1>{{ ent[1] }} <span class="badge">{{ ent[2] }}</span></h1>
+<p class="muted">首次出现 {{ ent[3] }} · 最近出现 {{ ent[4] }}</p>
+
+<h2>事件时间线（{{ events|length }}）</h2>
+<table>
+  <tr><th>类型</th><th>事件</th><th>发生日期</th><th>记录时间</th></tr>
+  {% for ev in events %}
+  <tr><td><span class="badge">{{ ev[0] }}</span></td><td>{{ ev[1] }}</td><td>{{ ev[2] or "—" }}</td><td>{{ ev[3] }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>关联条目（{{ items|length }}）</h2>
+<table>
+  <tr><th>标题</th><th>日期</th><th>重要度</th></tr>
+  {% for it in items %}
+  <tr><td><a href="{{ it[2] }}" target="_blank" rel="noopener">{{ it[1] }}</a></td><td>{{ it[3] or "—" }}</td><td>{{ it[4] }}</td></tr>
+  {% endfor %}
+</table>
+{% endblock %}
