@@ -15,9 +15,10 @@
 
 <h2>历史记录</h2>
 <table>
-  <tr><th>时间</th><th>状态</th><th>成本</th><th>调用</th><th>输入 tokens</th><th>输出 tokens</th><th>节点明细</th></tr>
+  <tr><th>运行ID</th><th>时间</th><th>状态</th><th>成本</th><th>调用</th><th>输入 tokens</th><th>输出 tokens</th><th>节点明细</th></tr>
   {% for r in runs %}
   <tr>
+    <td>{{ r.id }}</td>
     <td>{{ r.started }}</td>
     <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
     <td>${{ r.cost }}</td>
