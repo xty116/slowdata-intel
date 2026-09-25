@@ -139,7 +139,13 @@ cd /Users/xty116/Documents/Deepseek_Project/数据agent
 ```bash
 cd /Users/xty116/Documents/Deepseek_Project/数据agent
 
-# —— 运行 ——
+# —— Web 看板（推荐日常入口）——
+./run.sh serve                    # 启动看板：http://127.0.0.1:8000
+                                  # 含每日 08:30 自动运行（本机时区），浏览器里可手动触发
+./run.sh serve --no-schedule      # 只看板不定时（调试用）
+./run.sh serve --port 8765        # 换端口
+
+# —— 命令行运行 ——
 ./run.sh run                      # 完整日度流水线（5~8 分钟）
 ./run.sh run --max-queries 6      # 省钱试验：缩小检索规模
 ./run.sh run --date 2026-09-26    # 指定报告日期（一般用不到）
@@ -154,12 +160,11 @@ cd /Users/xty116/Documents/Deepseek_Project/数据agent
 # —— 人工线索导入（LinkedIn 等合规通道）——
 ./run.sh import-csv config/linkedin_import.example.csv
 # CSV 列：title,url,content,published_date,source,dimensions（source 默认 linkedin_manual）
-
-# —— 定时运行（macOS launchd，可选，M3 前替代方案）——
-# 每天 08:30 自动跑一次：
-#  crontab -e 添加：
-#  30 8 * * * cd /Users/xty116/Documents/Deepseek_Project/数据agent && ./run.sh run >> data/cron.log 2>&1
 ```
+
+**Web 看板页面一览**：`/` 概览（库存/成本/信源分布）· `/reports` 日报列表与阅读 · `/items` 条目检索（信源/维度/重要度/核验状态过滤）· `/entities` 实体档案（时间线+关联条目）· `/watchlist` 关注清单在线增删 · `/runs` 运行历史（节点级成本明细）+ 手动触发（可设检索上限，页面轮询进度）。
+
+> 看板与定时运行由同一个 `./run.sh serve` 进程承担：保持它运行即可每日自动出日报；不启动时也可随时 `./run.sh run` 手动跑。
 
 **改关注清单立即生效**：编辑 `config/watchlist.yaml` 的 queries（如加入 `"LiveCodeBench leaderboard top"`、竞品名、供应商名），下次运行生效，无需重启任何服务。
 
@@ -265,8 +270,10 @@ A：`config/config.yaml` 的 `llm.base_url/tier_l1/tier_l2` 改指向 OpenAI 兼
 |--------|------|------|
 | M1 | LLM 分层 + 存储 + Tavily + 单条流水线 + 日报 | ✅ 完成 |
 | M2 | 多信源 + 网页抓取 + 时间窗 + Claim 核验 + 矛盾裁决 + Critic 回路 + 实体事件 | ✅ 完成 |
-| M3 | Web 看板（日报阅读/实体时间线/成本看板/手动触发）+ 定时调度 | 待你试验确认后开工 |
-| M4 | 深潜模式（on-demand 调研问答）+ 周复盘半自动迭代 + Watchlist 演化 | 待开工 |
+| M3 | Web 看板（概览/日报/条目/实体/关注清单/运行+手动触发）+ 每日 08:30 定时调度 | ✅ 完成 |
+| M4 | 深潜模式（on-demand 调研问答）+ 周复盘半自动迭代 + Watchlist 演化 + 信源健康度 | 待开工 |
+
+**源码仓库**：https://github.com/xty116/slowdata-intel（私有；如转公开可自行在仓库 Settings 修改）。
 
 ---
 
