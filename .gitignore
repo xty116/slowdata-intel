@@ -14,3 +14,4 @@ reports/
 *.egg-info/
 .DS_Store
 :memory:.ses
+tools/

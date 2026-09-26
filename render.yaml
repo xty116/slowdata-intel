@@ -1,0 +1,22 @@
+# Render 一键部署配置（Blueprints）
+# 用法：Render Dashboard → New → Blueprint → 选择本仓库 → 依次填入密钥即可
+services:
+  - type: web
+    name: slowdata-intel
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /login
+    disk:
+      name: slowdata-data
+      mountPath: /data
+      sizeGB: 5
+    envVars:
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: DASHBOARD_TOKEN
+        sync: false
+      - key: SLOWDATA_DATA_DIR
+        value: /data

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import html
 import json
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -61,6 +62,37 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="慢数据情报台", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# 公网访问口令（DASHBOARD_TOKEN 环境变量；为空则开放访问）
+PUBLIC_TOKEN = (os.environ.get("DASHBOARD_TOKEN") or "").strip()
+
+
+@app.middleware("http")
+async def auth_gate(request: Request, call_next):
+    if PUBLIC_TOKEN:
+        path = request.url.path
+        if path.startswith("/static") or path in ("/login",):
+            return await call_next(request)
+        if request.cookies.get("slowdata_token") != PUBLIC_TOKEN:
+            if path.startswith("/api"):
+                return JSONResponse({"error": "unauthorized"}, status_code=401)
+            return RedirectResponse("/login", status_code=303)
+    return await call_next(request)
+
+
+@app.get("/login", response_class=HTMLResponse)
+def login_page():
+    return render("login.html")
+
+
+@app.post("/login")
+async def login(request: Request):
+    form = await request.form()
+    if (form.get("token") or "").strip() == PUBLIC_TOKEN:
+        resp = RedirectResponse("/", status_code=303)
+        resp.set_cookie("slowdata_token", PUBLIC_TOKEN, httponly=True, max_age=30 * 24 * 3600)
+        return resp
+    return render("login.html", error="口令错误，请重试")
 
 
 # ---------------------------------------------------------------------------

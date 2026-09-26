@@ -19,6 +19,12 @@ def _load_yaml(name: str) -> dict:
 CONFIG = _load_yaml("config.yaml")
 WATCHLIST = _load_yaml("watchlist.yaml")
 
+# 云部署：SLOWDATA_DATA_DIR 指向持久化磁盘（Render 等），覆盖数据与报告目录
+_DATA_DIR = os.environ.get("SLOWDATA_DATA_DIR", "").strip()
+if _DATA_DIR:
+    CONFIG.setdefault("report", {})["db_path"] = os.path.join(_DATA_DIR, "slowdata.db")
+    CONFIG.setdefault("report", {})["output_dir"] = os.path.join(_DATA_DIR, "reports")
+
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY", "")
 TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY", "")
 

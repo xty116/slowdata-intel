@@ -4,6 +4,8 @@
 > 产出带证据链的中文情报日报，并把全部线索沉淀为可检索、可追溯的"慢数据"资产。
 > 架构设计详见 [`docs/01-architecture.md`](docs/01-architecture.md)。
 
+**🖥️ 在线看板**：<https://consisting-elect-opposite-maui.trycloudflare.com>（临时公网链接，口令访问；永久部署方式见 §12）
+
 ---
 
 ## 目录
@@ -273,7 +275,39 @@ A：`config/config.yaml` 的 `llm.base_url/tier_l1/tier_l2` 改指向 OpenAI 兼
 | M3 | Web 看板（概览/日报/条目/实体/关注清单/运行+手动触发）+ 每日 08:30 定时调度 | ✅ 完成 |
 | M4 | 深潜模式（on-demand 调研问答）+ 周复盘半自动迭代 + Watchlist 演化 + 信源健康度 | 待开工 |
 
-**源码仓库**：https://github.com/xty116/slowdata-intel（私有；如转公开可自行在仓库 Settings 修改）。
+**源码仓库（公开）**：https://github.com/xty116/slowdata-intel
+
+---
+
+## 12. 公网访问看板
+
+看板默认运行在本地（http://127.0.0.1:8000）。对外提供两种方式：
+
+### 方式 A：临时公网链接（cloudflared 免账号隧道）
+
+适用：临时演示、给同事看几天。要求：本机开机、`./run.sh serve` 保持运行。
+
+```bash
+# 1. 启动看板（如未启动）
+./run.sh serve
+
+# 2. 另开终端启动隧道（tools/ 已含二进制，也可 brew install cloudflared）
+./tools/cloudflared tunnel --url http://127.0.0.1:8000 --no-autoupdate
+# 输出中的 https://xxx.trycloudflare.com 即公网链接，发给任何人即可
+```
+
+注意：隧道链接**每次启动会变化**、且依赖本机在线；**务必设置 `DASHBOARD_TOKEN`**（`.env` 中），否则拿到链接的任何人可查看情报并触发付费运行。
+
+### 方式 B：永久公网链接（Render 一键部署）
+
+适用：长期给团队使用。步骤（需你自己的 GitHub 账号，约 5 分钟）：
+
+1. 打开 [render.com](https://render.com) 用 GitHub 登录；
+2. New → **Blueprint** → 连接本仓库 → 自动读取 `render.yaml`；
+3. 填入三个密钥：`DEEPSEEK_API_KEY`、`TAVILY_API_KEY`、`DASHBOARD_TOKEN`（看板口令）；
+4. 部署完成后获得 `https://xxx.onrender.com` 永久链接（首次访问会先下载嵌入模型，等待几分钟即可）。
+
+Free 计划会休眠：约 15 分钟无访问后服务休眠，下次访问冷启动约 1~2 分钟；付费计划常驻。
 
 ---
 
