@@ -1,23 +1,41 @@
 {% extends "base.html" %}
 {% block title %}{{ ent[1] }} · 实体档案{% endblock %}
 {% block content %}
-<p><a href="/entities">← 返回实体列表</a></p>
-<h1>{{ ent[1] }} <span class="badge">{{ ent[2] }}</span></h1>
-<p class="muted">首次出现 {{ ent[3] }} · 最近出现 {{ ent[4] }}</p>
+<div class="page-head">
+  <a class="btn ghost sm" href="/entities">← 返回</a>
+  <h1>{{ ent[1] }}</h1>
+  <span class="badge dim">{{ ent[2] }}</span>
+  <span class="sub">首次出现 {{ ent[3] }} · 最近出现 {{ ent[4] }}</span>
+</div>
 
-<h2>事件时间线（{{ events|length }}）</h2>
-<table>
-  <tr><th>类型</th><th>事件</th><th>发生日期</th><th>记录时间</th></tr>
-  {% for ev in events %}
-  <tr><td><span class="badge">{{ ev[0] }}</span></td><td>{{ ev[1] }}</td><td>{{ ev[2] or "—" }}</td><td>{{ ev[3] }}</td></tr>
-  {% endfor %}
-</table>
+<div class="grid cols-2">
+  <div class="card">
+    <h3>⏱️ 事件活跃度（按天）</h3>
+    <div class="chart" id="chart-timeline"></div>
+  </div>
+  <div class="card">
+    <h3>⚡ 事件时间线（{{ events|length }} 条）</h3>
+    <div style="max-height:340px;overflow-y:auto">
+      <table>
+        <tr><th>类型</th><th>事件</th><th>日期</th></tr>
+        {% for ev in events %}
+        <tr><td><span class="badge">{{ ev[0] }}</span></td><td>{{ ev[1] }}</td><td>{{ ev[2] or "—" }}</td></tr>
+        {% endfor %}
+      </table>
+    </div>
+  </div>
+</div>
 
-<h2>关联条目（{{ items|length }}）</h2>
-<table>
-  <tr><th>标题</th><th>日期</th><th>重要度</th></tr>
-  {% for it in items %}
-  <tr><td><a href="{{ it[2] }}" target="_blank" rel="noopener">{{ it[1] }}</a></td><td>{{ it[3] or "—" }}</td><td>{{ it[4] }}</td></tr>
-  {% endfor %}
-</table>
+<div class="card" style="margin-top:16px">
+  <h3>🔗 关联条目（{{ items|length }}）</h3>
+  <div class="table-wrap">
+    <table>
+      <tr><th>标题</th><th>日期</th><th>重要度</th></tr>
+      {% for it in items %}
+      <tr><td><a class="ttl" href="{{ it[2] }}" target="_blank" rel="noopener">{{ it[1] }}</a></td><td>{{ it[3] or "—" }}</td><td class="num-col">{{ it[4] }}</td></tr>
+      {% endfor %}
+    </table>
+  </div>
+</div>
+<script src="/static/js/entity_detail.js"></script>
 {% endblock %}

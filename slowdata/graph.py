@@ -194,4 +194,8 @@ class Pipeline:
             "completion_tokens": s.completion_tokens,
             "per_node": {k: {"calls": v["calls"], "cost_usd": round(v["cost_usd"], 4)} for k, v in s.per_node.items()},
             "warnings": result.get("warnings", []) + self.llm.warnings,
+            "critic_scores": result.get("critic_scores", {}),
+            "critic_round": result.get("critic_round", 0),
+            "critic_failed_accept": bool(result.get("critic_failed_accept")),
+            "duration_s": result.get("duration_s"),
         }

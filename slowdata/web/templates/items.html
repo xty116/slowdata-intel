@@ -1,46 +1,46 @@
 {% extends "base.html" %}
 {% block title %}条目检索 · 慢数据情报台{% endblock %}
 {% block content %}
-<h1>条目检索</h1>
-<form method="get" class="filters">
-  <select name="source">
-    <option value="">全部信源</option>
-    {% for s in sources %}<option value="{{ s }}" {% if f.source == s %}selected{% endif %}>{{ s }}</option>{% endfor %}
-  </select>
-  <select name="dimension">
-    <option value="">全部维度</option>
-    {% for d in ["benchmark","competitor","talent","supplier"] %}
-    <option value="{{ d }}" {% if f.dimension == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
-  </select>
-  <select name="min_imp">
-    {% for i in range(0, 6) %}<option value="{{ i }}" {% if f.min_imp == i %}selected{% endif %}>重要度 ≥ {{ i }}</option>{% endfor %}
-  </select>
-  <select name="verified">
-    <option value="">核验：全部</option>
-    <option value="1" {% if f.verified == "1" %}selected{% endif %}>已核验</option>
-    <option value="0" {% if f.verified == "0" %}selected{% endif %}>未核验</option>
-  </select>
-  <input type="text" name="q" placeholder="标题关键词" value="{{ f.q }}">
-  <button type="submit">筛选</button>
-</form>
+<div class="page-head">
+  <h1>🔎 条目检索</h1>
+  <span class="sub" id="items-total"></span>
+</div>
 
-<table>
-  <tr><th>ID</th><th>标题</th><th>维度</th><th>重要度</th><th>状态</th><th>核验</th><th>信源</th><th>日期</th></tr>
-  {% for r in rows %}
-  <tr>
-    <td>{{ r[0] }}</td>
-    <td class="title-cell"><a href="{{ r[2] }}" target="_blank" rel="noopener">{{ r[1] }}</a></td>
-    <td>{{ r[7] }}</td>
-    <td>{{ r[5] }}</td>
-    <td>{% if r[6] %}🆕{% else %}复现{% endif %}</td>
-    <td>
-      {% set v = verdict_map.get(r[8]) %}
-      {% if v %}{{ v.support }}✅ {{ v.contradict }}❌ {{ v.unverified }}❓{% else %}—{% endif %}
-    </td>
-    <td>{{ r[3] }}</td>
-    <td>{{ r[4] or "—" }}</td>
-  </tr>
-  {% endfor %}
-</table>
-<p class="muted">最多显示 200 条（按入库倒序）。</p>
+<div class="filters">
+  <input type="text" id="f-q" class="grow" placeholder="标题关键词（回车或输入即搜）">
+  <select id="f-source"><option value="">全部信源</option></select>
+  <select id="f-dim">
+    <option value="">全部维度</option>
+    <option value="benchmark">benchmark</option>
+    <option value="competitor">competitor</option>
+    <option value="talent">talent</option>
+    <option value="supplier">supplier</option>
+  </select>
+  <select id="f-imp">
+    <option value="0">重要度不限</option>
+    <option value="5">重要度 ≥ 5</option>
+    <option value="4">重要度 ≥ 4</option>
+    <option value="3">重要度 ≥ 3</option>
+  </select>
+  <select id="f-ver">
+    <option value="">核验：全部</option>
+    <option value="1">已核验</option>
+    <option value="0">未核验</option>
+  </select>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table id="items-table">
+      <thead><tr><th>ID</th><th>标题</th><th>维度</th><th>重要度</th><th>状态</th><th>核验</th><th>信源</th><th>日期</th></tr></thead>
+      <tbody id="items-body"><tr><td colspan="8" class="empty">加载中…</td></tr></tbody>
+    </table>
+  </div>
+  <div class="filters" style="justify-content:center">
+    <button class="ghost sm" id="btn-prev">‹ 上一页</button>
+    <span class="sub" id="page-info"></span>
+    <button class="ghost sm" id="btn-next">下一页 ›</button>
+  </div>
+</div>
+<script src="/static/js/items.js"></script>
 {% endblock %}

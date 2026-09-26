@@ -1,20 +1,23 @@
 {% extends "base.html" %}
 {% block title %}日报 · 慢数据情报台{% endblock %}
 {% block content %}
-<h1>日报</h1>
+<div class="page-head">
+  <h1>📰 情报日报</h1>
+  <span class="sub">每日 08:30 自动生成，也可在「运行」页手动触发</span>
+</div>
 {% if reports %}
-  <table>
-    <tr><th>日期</th><th>大小</th><th>修改时间</th><th></th></tr>
-    {% for r in reports %}
-    <tr>
-      <td>{{ r.date }}</td>
-      <td>{{ (r.size/1024)|round(1) }} KB</td>
-      <td>{{ r.mtime|int|default(0) }}</td>
-      <td><a href="/reports/{{ r.date }}">阅读</a></td>
-    </tr>
-    {% endfor %}
-  </table>
+<div class="grid cols-3">
+  {% for r in reports %}
+  <a class="card clickable" href="/reports/{{ r.date }}" style="display:block">
+    <h3 style="margin-bottom:6px;color:var(--text)">🗞️ {{ r.date }}</h3>
+    <div class="kv">
+      <span>{{ (r.size/1024)|round(1) }} KB</span>
+      <span>生成于 {{ r.mtime }}</span>
+    </div>
+  </a>
+  {% endfor %}
+</div>
 {% else %}
-  <p class="muted">暂无日报，先到 <a href="/runs">运行</a> 页触发一次。</p>
+<div class="empty">暂无日报，先到 <a href="/runs">运行</a> 页触发一次</div>
 {% endif %}
 {% endblock %}

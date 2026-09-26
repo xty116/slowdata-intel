@@ -1,25 +1,23 @@
 {% extends "base.html" %}
 {% block title %}实体 · 慢数据情报台{% endblock %}
 {% block content %}
-<h1>实体档案</h1>
-<form method="get" class="filters">
-  <select name="etype">
-    <option value="">全部类型</option>
-    {% for t in types %}<option value="{{ t }}" {% if f.etype == t %}selected{% endif %}>{{ t }}</option>{% endfor %}
-  </select>
-  <input type="text" name="q" placeholder="实体名" value="{{ f.q }}">
-  <button type="submit">筛选</button>
-</form>
-<table>
-  <tr><th>实体</th><th>类型</th><th>首次出现</th><th>最近出现</th><th></th></tr>
-  {% for r in rows %}
-  <tr>
-    <td>{{ r[1] }}</td>
-    <td>{{ r[2] }}</td>
-    <td>{{ r[3] }}</td>
-    <td>{{ r[4] }}</td>
-    <td><a href="/entities/{{ r[0] }}">档案 →</a></td>
-  </tr>
-  {% endfor %}
-</table>
+<div class="page-head">
+  <h1>🏢 实体档案</h1>
+  <span class="sub">公司 / 模型 / benchmark / 数据集 / 人物 / 供应商</span>
+</div>
+<div class="filters">
+  <input type="text" id="f-q" class="grow" placeholder="搜索实体名（输入即搜）">
+</div>
+<div class="chips" id="type-chips">
+  <span class="chip active" data-type="">全部</span>
+</div>
+<div class="card" style="margin-top:14px">
+  <div class="table-wrap">
+    <table id="ent-table">
+      <thead><tr><th>实体</th><th>类型</th><th>首次出现</th><th>最近出现</th><th></th></tr></thead>
+      <tbody id="ent-body"><tr><td colspan="5" class="empty">加载中…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script src="/static/js/entities.js"></script>
 {% endblock %}

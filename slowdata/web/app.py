@@ -314,17 +314,195 @@ async def api_trigger(request: Request):
     return JSONResponse({"started": started, **manager.snapshot()})
 
 
+# ---------------------------------------------------------------------------
+# 看板数据 API（供前端 ECharts / SPA 使用）
+# ---------------------------------------------------------------------------
+@app.get("/api/overview")
+def api_overview():
+    st = get_store()
+    totals = {
+        "items": st.con.execute("SELECT COUNT(*) FROM items").fetchone()[0],
+        "entities": st.con.execute("SELECT COUNT(*) FROM entities").fetchone()[0],
+        "events": st.con.execute("SELECT COUNT(*) FROM events").fetchone()[0],
+        "claims": st.con.execute("SELECT COUNT(*) FROM claims").fetchone()[0],
+    }
+    month_rows = st.con.execute(
+        "SELECT stats_json FROM runs WHERE status='success' AND started_at >= date('now','start of month')"
+    ).fetchall()
+    month_cost = round(sum((json.loads(r[0]).get("cost_usd", 0) if r[0] else 0) for r in month_rows), 4)
+
+    latest = st.con.execute(
+        "SELECT id, started_at, status, stats_json FROM runs ORDER BY started_at DESC LIMIT 1"
+    ).fetchone()
+    latest_stats = json.loads(latest[3]) if latest and latest[3] else {}
+    per_source = []
+    if latest:
+        per_source = [
+            [s, c, a]
+            for s, c, a in st.con.execute(
+                "SELECT source, COUNT(*), ROUND(AVG(importance),2) FROM items WHERE run_id=? GROUP BY source ORDER BY COUNT(*) DESC",
+                (latest[0],),
+            ).fetchall()
+        ]
+
+    rows = st.con.execute(
+        "SELECT substr(started_at,1,10) d, stats_json FROM runs WHERE status='success' AND started_at >= date('now','-13 days')"
+    ).fetchall()
+    by_day: dict[str, float] = {}
+    for d, sj in rows:
+        cost = json.loads(sj).get("cost_usd", 0) if sj else 0
+        by_day[d] = by_day.get(d, 0) + round(cost, 4)
+    days = sorted(by_day)
+    cost_series = {"dates": days, "costs": [by_day[d] for d in days]}
+
+    recent_runs = st.con.execute(
+        "SELECT id, started_at, status, stats_json FROM runs ORDER BY started_at DESC LIMIT 8"
+    ).fetchall()
+    recent = []
+    for rid, s, status, sj in recent_runs:
+        stats = json.loads(sj) if sj else {}
+        recent.append(
+            {
+                "id": rid,
+                "at": s,
+                "status": status,
+                "cost": stats.get("cost_usd", 0),
+                "calls": stats.get("calls", 0),
+                "critic_scores": stats.get("critic_scores", {}),
+            }
+        )
+
+    reports_dir = ROOT / CONFIG["report"].get("output_dir", "reports")
+    reports = sorted((f.stem for f in reports_dir.glob("*.md")), reverse=True) if reports_dir.exists() else []
+
+    return JSONResponse(
+        {
+            "totals": totals,
+            "month_cost": month_cost,
+            "latest_run": {
+                "id": latest[0] if latest else None,
+                "at": latest[1] if latest else None,
+                "status": latest[2] if latest else None,
+                **{k: latest_stats.get(k) for k in ("cost_usd", "calls", "critic_scores", "critic_round", "critic_failed_accept")},
+            },
+            "per_source": per_source,
+            "cost_series": cost_series,
+            "recent_runs": recent,
+            "reports": reports[:10],
+            "snapshot": manager.snapshot(),
+        }
+    )
+
+
+@app.get("/api/items")
+def api_items(
+    source: str = "", dimension: str = "", min_imp: int = 0, q: str = "", verified: str = "", offset: int = 0, limit: int = 50
+):
+    st = get_store()
+    where, params = ["1=1"], []
+    if source:
+        where.append("source=?"); params.append(source)
+    if dimension:
+        where.append("dimensions LIKE ?"); params.append(f'%"{dimension}"%')
+    if min_imp:
+        where.append("importance>=?"); params.append(int(min_imp))
+    if q:
+        where.append("title LIKE ?"); params.append(f"%{q}%")
+    if verified == "1":
+        where.append("url_hash IN (SELECT item_url_hash FROM claims)")
+    elif verified == "0":
+        where.append("url_hash NOT IN (SELECT item_url_hash FROM claims)")
+    cond = " AND ".join(where)
+    total = st.con.execute(f"SELECT COUNT(*) FROM items WHERE {cond}", params).fetchone()[0]
+    rows = st.con.execute(
+        f"SELECT id, title, url, source, published_date, importance, is_new, dimensions, url_hash "
+        f"FROM items WHERE {cond} ORDER BY id DESC LIMIT ? OFFSET ?",
+        params + [min(int(limit), 100), int(offset)],
+    ).fetchall()
+    hashes = [r[8] for r in rows]
+    verdict_map: dict[str, dict[str, int]] = {}
+    if hashes:
+        ph = ",".join("?" * len(hashes))
+        for h, v in st.con.execute(f"SELECT item_url_hash, verdict FROM claims WHERE item_url_hash IN ({ph})", hashes):
+            m = verdict_map.setdefault(h, {"support": 0, "contradict": 0, "unverified": 0})
+            m[v] = m.get(v, 0) + 1
+    return JSONResponse(
+        {
+            "total": total,
+            "rows": [
+                {
+                    "id": r[0], "title": r[1], "url": r[2], "source": r[3], "date": r[4] or "",
+                    "importance": r[5], "is_new": bool(r[6]), "dims": r[7],
+                    "verdicts": verdict_map.get(r[8]),
+                }
+                for r in rows
+            ],
+        }
+    )
+
+
+@app.get("/api/entity/{eid}/timeline")
+def api_entity_timeline(eid: int):
+    st = get_store()
+    events = st.con.execute(
+        "SELECT event_type, summary, happened_at, created_at FROM events WHERE entity_id=? ORDER BY id DESC LIMIT 200",
+        (eid,),
+    ).fetchall()
+    by_day: dict[str, int] = {}
+    detail = []
+    for et, sm, ha, ca in events:
+        d = (ha or ca or "")[:10]
+        if d:
+            by_day[d] = by_day.get(d, 0) + 1
+        detail.append({"type": et, "summary": sm, "date": d})
+    days = sorted(by_day)
+    return JSONResponse({"days": days, "counts": [by_day[d] for d in days], "detail": detail})
+
+
+@app.get("/api/entities-list")
+def api_entities_list(etype: str = "", q: str = "", limit: int = 200):
+    st = get_store()
+    where, params = ["1=1"], []
+    if etype:
+        where.append("type=?"); params.append(etype)
+    if q:
+        where.append("name LIKE ?"); params.append(f"%{q}%")
+    rows = st.con.execute(
+        f"SELECT id, name, type, first_seen, last_seen FROM entities WHERE {' AND '.join(where)} ORDER BY last_seen DESC LIMIT ?",
+        params + [min(int(limit), 500)],
+    ).fetchall()
+    types = [r[0] for r in st.con.execute("SELECT DISTINCT type FROM entities ORDER BY type")]
+    return JSONResponse(
+        {
+            "rows": [{"id": r[0], "name": r[1], "type": r[2], "first_seen": r[3], "last_seen": r[4]} for r in rows],
+            "types": types,
+        }
+    )
+
+
+@app.get("/api/runs/latest")
+def api_runs_latest():
+    st = get_store()
+    row = st.con.execute(
+        "SELECT stats_json FROM runs ORDER BY started_at DESC LIMIT 1"
+    ).fetchone()
+    return JSONResponse(json.loads(row[0]) if row and row[0] else {})
+
+
 async def run_server(host: str | None = None, port: int | None = None, no_schedule: bool = False):
+    import os
+    import subprocess
+    import sys
+
     import uvicorn
 
     cfg = CONFIG.get("web", {})
     if no_schedule:
         CONFIG["schedule"] = {"enabled": False}
-    config = uvicorn.Config(
-        app,
-        host=host or cfg.get("host", "127.0.0.1"),
-        port=port or int(cfg.get("port", 8000)),
-        log_level="info",
-    )
+    host = host or cfg.get("host", "127.0.0.1")
+    port = port or int(cfg.get("port", 8000))
+    if sys.platform == "darwin" and not os.environ.get("SLOWDATA_NO_OPEN"):
+        subprocess.Popen(["open", f"http://{host}:{port}"])
+    config = uvicorn.Config(app, host=host, port=port, log_level="info")
     server = uvicorn.Server(config)
     await server.serve()

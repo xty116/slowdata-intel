@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}慢数据情报台{% endblock %}</title>
 <link rel="stylesheet" href="/static/style.css">
+<script src="/static/vendor/echarts.min.js"></script>
+<script src="/static/js/common.js"></script>
 </head>
 <body>
 <header class="topbar">
-  <span class="brand">🐢 慢数据情报台</span>
+  <span class="brand"><span class="turtle">🐢</span>慢数据情报台</span>
   <nav>
     <a href="/">概览</a>
     <a href="/reports">日报</a>
@@ -21,5 +23,7 @@
 <main>
 {% block content %}{% endblock %}
 </main>
+<footer>慢数据情报台 · 数据沉淀于本地 SQLite · 报告仅供内部决策参考，重要结论请人工复核原文</footer>
+<script>setActiveNav();</script>
 </body>
 </html>

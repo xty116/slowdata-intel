@@ -1,8 +1,18 @@
 {% extends "base.html" %}
 {% block title %}日报 {{ date }} · 慢数据情报台{% endblock %}
 {% block content %}
-<p><a href="/reports">← 返回日报列表</a></p>
-<article class="report">
-{{ content | safe }}
-</article>
+<div class="page-head">
+  <h1>📄 日报 {{ date }}</h1>
+  <a class="btn ghost sm" href="/reports">← 返回列表</a>
+</div>
+<div class="report-layout">
+  <aside class="toc" id="toc">
+    <h4>目录导航</h4>
+    <div id="toc-links"><span class="muted">解析中…</span></div>
+  </aside>
+  <article class="report" id="report-body">
+    {{ content | safe }}
+  </article>
+</div>
+<script src="/static/js/report.js"></script>
 {% endblock %}
