@@ -7,7 +7,7 @@ COPY pyproject.toml README.md ./
 COPY slowdata ./slowdata
 COPY config ./config
 
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir -e .
 
 ENV HF_HOME=/data/.hf-cache \
     FASTEMBED_CACHE_PATH=/data/.fastembed-cache \

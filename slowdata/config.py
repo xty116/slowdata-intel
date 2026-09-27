@@ -7,7 +7,9 @@ from pathlib import Path
 import yaml
 from dotenv import load_dotenv
 
-ROOT = Path(__file__).resolve().parent.parent
+# ROOT 定位策略：包内 config 存在（本地可编辑安装）→ 用包路径；否则回退到工作目录（容器部署）
+_PKG_ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(os.environ.get("SLOWDATA_ROOT", _PKG_ROOT if (_PKG_ROOT / "config" / "config.yaml").exists() else Path.cwd()))
 load_dotenv(ROOT / ".env")
 
 
