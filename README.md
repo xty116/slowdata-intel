@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-  <a href="https://consisting-elect-opposite-maui.trycloudflare.com">🖥️ 在线看板（演示）</a> ·
+  <a href="https://slowdata-intel.onrender.com">🖥️ 在线看板（永久公开）</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#系统架构">架构</a> ·
   <a href="#部署">部署</a> ·
@@ -183,13 +183,19 @@ docker run -d -p 8000:8000 \
 
 ### Render 一键部署（获得永久公网链接）
 
+本仓库已部署于 Render（公开只读模式）：**https://slowdata-intel.onrender.com**
+
+自己部署：
+
 1. 打开 [render.com](https://render.com)，用 GitHub 账号登录；
 2. **New → Blueprint** → 选择本仓库（自动读取 `render.yaml`）；
-3. 填入三个密钥：`DEEPSEEK_API_KEY`、`TAVILY_API_KEY`、`DASHBOARD_TOKEN`（看板口令）；
-4. 部署完成后获得 `https://xxx.onrender.com` 永久链接（首次运行自动下载嵌入模型，等待几分钟）。
+3. 填入两个密钥：`DEEPSEEK_API_KEY`、`TAVILY_API_KEY`（看板默认公开只读，无口令）；
+4. 部署完成后获得 `https://xxx.onrender.com` 永久链接。
 
 > Free 计划无月费，约 15 分钟无访问后休眠（下次访问冷启动 1~2 分钟）；Starter 计划（$7/月）常驻。
-> 若希望看板**公开只读**（无口令、禁止触发运行），将环境变量 `SLOWDATA_READONLY=1`。
+> 公开只读模式（`SLOWDATA_READONLY=1`）：所有访客可查看数据，但**不能触发运行、不能修改关注清单**；定时任务照常自动运行。
+> 若要口令保护：设置环境变量 `DASHBOARD_TOKEN` 并移除/置空 `SLOWDATA_READONLY`。
+> 云端 512MB 内存自动使用 `SLOWDATA_NO_EMBED=1`（标题相似度去重）；自建大内存实例可去掉该变量启用本地嵌入。
 
 ### 临时公网链接（免账号，演示用）
 
