@@ -555,7 +555,8 @@ async def run_server(host: str | None = None, port: int | None = None, no_schedu
     if no_schedule:
         CONFIG["schedule"] = {"enabled": False}
     host = host or cfg.get("host", "127.0.0.1")
-    port = port or int(cfg.get("port", 8000))
+    # 云平台（Render 等）要求监听其分配的 PORT 环境变量
+    port = int(os.environ.get("PORT") or (port or cfg.get("port", 8000)))
     if sys.platform == "darwin" and not os.environ.get("SLOWDATA_NO_OPEN"):
         subprocess.Popen(["open", f"http://{host}:{port}"])
     config = uvicorn.Config(app, host=host, port=port, log_level="info")
