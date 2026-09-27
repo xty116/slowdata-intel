@@ -225,27 +225,3 @@ slowdata-intel/
 └── run.sh                 # 一键入口（run / serve / stats / db / import-csv）
 ```
 
-## 路线图
-
-- [x] **M1** LLM 分层 + 存储层 + Tavily 检索 + 单条流水线 + 日报
-- [x] **M2** 多信源 + 网页抓取 + 时间窗 + Claim 核验 + 矛盾裁决 + Critic 回路 + 实体事件沉淀
-- [x] **M3** Web 看板（ECharts 可视化）+ 每日 08:30 定时调度 + 公网部署
-- [ ] **M4** 深潜模式（on-demand 调研问答）+ 周复盘半自动迭代 + Watchlist 演化闭环 + 信源健康度
-
-## FAQ
-
-**为什么 Critic"时效性"分数经常偏低？** 全网大量信源不暴露发布日期，系统如实扣分并把涉及的条目列出来——这是把数据质量问题摆在明面上，提示人工复核，而非隐藏。
-
-**同一天重复运行会重复入库吗？** 不会。同 URL 条目做合并更新（upsert），报告状态列显示"复现"，跨天向量比对自动去重。
-
-**单次运行成本多少？** LLM 约 $0.13、Tavily 约 40 credits（免费档 1000/月 ≈ 25 次）、耗时 5~8 分钟。可用 `--max-queries` 和配置项进一步压缩。
-
-**能换其他 LLM 供应商吗？** 可以。`config/config.yaml` 中 `llm.base_url / tier_l1 / tier_l2` 指向任意 OpenAI 兼容端点即可，分层逻辑不变。
-
-## 致谢
-
-- 模型能力：[DeepSeek](https://www.deepseek.com) 官方 API、Qwen3-Embedding
-- 检索：[Tavily](https://tavily.com)、[OpenAlex](https://openalex.org)、GitHub / HuggingFace 官方 API
-- 编排与界面：[LangGraph](https://langchain.com/langgraph)、FastAPI、[Apache ECharts](https://echarts.apache.org)
-
-> 本项目未附带开源许可证前，默认保留所有权利；仓库内容仅供学习与团队内部参考。

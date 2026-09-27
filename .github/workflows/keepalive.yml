@@ -1,0 +1,21 @@
+# 保活：每 10 分钟访问一次公网看板，防止 Render 免费计划休眠
+# 公开仓库 GitHub Actions 免费；仅做一次 GET 请求，无副作用（看板为只读模式）
+name: keepalive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping dashboard
+        run: |
+          for i in 1 2 3; do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 90 https://slowdata-intel.onrender.com/ || true)
+            echo "attempt $i: HTTP $CODE"
+            [ "$CODE" = "200" ] && break
+            sleep 20
+          done
