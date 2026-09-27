@@ -16,18 +16,25 @@
     {% for q in t.queries %}
     <span class="chip" title="{{ q }}">
       {{ q }}
+      {% if not readonly %}
       <form method="post" action="/watchlist/delete" class="inline-form" onsubmit="return confirm('删除检索词：{{ q }}？')">
         <input type="hidden" name="topic" value="{{ t.name }}">
         <input type="hidden" name="query" value="{{ q }}">
         <button type="submit" class="sm danger" style="padding:1px 7px;margin-left:6px;border-radius:999px">✕</button>
       </form>
+      {% endif %}
     </span>
     {% endfor %}
   </div>
+  {% if not readonly %}
   <form method="post" action="/watchlist/add" class="filters" style="margin:0">
     <input type="hidden" name="topic" value="{{ t.name }}">
     <input type="text" name="query" class="grow" placeholder="新增检索词（中英文均可，≤25 词）" required>
     <button type="submit">＋ 添加</button>
-  </form></div>
+  </form>
+  {% else %}
+  <p class="muted">🔒 只读模式：关注清单不可修改</p>
+  {% endif %}
+</div>
 {% endfor %}
 {% endblock %}
