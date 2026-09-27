@@ -1,9 +1,12 @@
-"""本地嵌入层：BGE-M3（fastembed/ONNX），语义去重用。
+"""本地嵌入层：Qwen3-Embedding（fastembed/ONNX），语义去重用。
 
-首次调用自动下载模型（约 570MB）；不可用时返回 None，上层回退到标题相似度。
+首次调用自动下载模型（约 1.1GB）；不可用时返回 None，上层回退到标题相似度。
+云端低内存部署（512MB）设置环境变量 SLOWDATA_NO_EMBED=1 可跳过嵌入模型，
+改用标题相似度去重（精度略降，内存占用可忽略）。
 """
 from __future__ import annotations
 
+import os
 import threading
 
 import numpy as np
@@ -13,17 +16,20 @@ from .config import CONFIG
 _model = None
 _lock = threading.Lock()
 _model_failed = False
+_DISABLED = os.environ.get("SLOWDATA_NO_EMBED", "").strip() == "1"
 
 
 def get_model():
     global _model, _model_failed
+    if _DISABLED:
+        return None
     if _model is None and not _model_failed:
         with _lock:
             if _model is None and not _model_failed:
                 try:
                     from fastembed import TextEmbedding
 
-                    name = CONFIG["dedup"].get("embedding_model", "BAAI/bge-m3")
+                    name = CONFIG["dedup"].get("embedding_model", "Qwen/Qwen3-Embedding-0.6B-Q")
                     print(f"[embedding] 加载本地模型 {name}（首次运行需下载，请耐心等待）...")
                     _model = TextEmbedding(model_name=name)
                     print("[embedding] 模型就绪")

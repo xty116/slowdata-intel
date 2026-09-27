@@ -17,9 +17,11 @@ services:
       - key: TAVILY_API_KEY
         sync: false
       - key: DASHBOARD_TOKEN
-        sync: false
+        value: ""
       - key: SLOWDATA_DATA_DIR
         value: /data
-      # 希望看板公开只读（无需口令、禁止触发运行）：DASHBOARD_TOKEN 留空，SLOWDATA_READONLY 改为 1
+      # 公开只读（无口令、禁止触发运行）；本地嵌入模型在 512MB 内存下自动降级为标题去重
       - key: SLOWDATA_READONLY
-        value: "0"
+        value: "1"
+      - key: SLOWDATA_NO_EMBED
+        value: "1"
