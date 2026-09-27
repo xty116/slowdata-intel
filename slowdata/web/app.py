@@ -65,6 +65,9 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # 公网访问口令（DASHBOARD_TOKEN 环境变量；为空则开放访问）
 PUBLIC_TOKEN = (os.environ.get("DASHBOARD_TOKEN") or "").strip()
+# 公开只读模式（SLOWDATA_READONLY=1）：禁止触发运行与修改关注清单
+READONLY = os.environ.get("SLOWDATA_READONLY", "").strip() == "1"
+READONLY_POST_PATHS = {"/api/runs", "/watchlist/add", "/watchlist/delete"}
 
 
 @app.middleware("http")
@@ -77,6 +80,8 @@ async def auth_gate(request: Request, call_next):
             if path.startswith("/api"):
                 return JSONResponse({"error": "unauthorized"}, status_code=401)
             return RedirectResponse("/login", status_code=303)
+    if READONLY and request.method == "POST" and request.url.path in READONLY_POST_PATHS:
+        return JSONResponse({"error": "readonly mode"}, status_code=403)
     return await call_next(request)
 
 
@@ -266,7 +271,7 @@ def _watchlist_path() -> Path:
 def watchlist_view():
     with open(_watchlist_path(), encoding="utf-8") as f:
         data = yaml.safe_load(f) or {}
-    return render("watchlist.html", topics=data.get("topics", []), path=str(_watchlist_path()))
+    return render("watchlist.html", topics=data.get("topics", []), path=str(_watchlist_path()), readonly=READONLY)
 
 
 @app.post("/watchlist/add")
@@ -335,7 +340,7 @@ def runs_view():
 
 @app.get("/api/runs/status")
 def api_status():
-    return JSONResponse(manager.snapshot())
+    return JSONResponse({**manager.snapshot(), "readonly": READONLY})
 
 
 @app.post("/api/runs")
