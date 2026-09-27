@@ -46,16 +46,34 @@ async def lifespan(app: FastAPI):
     if cfg.get("enabled", True):
         daily = str(cfg.get("daily_at", "08:30"))
         hh, mm = daily.split(":")
+        tz = (os.environ.get("SLOWDATA_TZ") or "").strip() or cfg.get("timezone") or None
         scheduler.add_job(
             manager.start,
-            CronTrigger(hour=int(hh), minute=int(mm)),
+            CronTrigger(hour=int(hh), minute=int(mm), timezone=tz),
             id="daily",
             name="日度情报流水线",
             max_instances=1,
             coalesce=True,
         )
+        # 云端首次预热：库为空时启动 90 秒后自动跑一次（免费档文件系统会在重新部署时清空，
+        # 该机制让看板"上线即有数据"；只触发一次，不增加长期成本）
+        if os.environ.get("SLOWDATA_WARMUP", "").strip() == "1":
+            from datetime import datetime, timedelta
+
+            from apscheduler.triggers.date import DateTrigger
+
+            n_items = get_store().con.execute("SELECT COUNT(*) FROM items").fetchone()[0]
+            if n_items == 0:
+                scheduler.add_job(
+                    manager.start,
+                    DateTrigger(run_date=datetime.now() + timedelta(seconds=90)),
+                    id="warmup",
+                    name="首次预热运行",
+                    max_instances=1,
+                )
+                print("[web] 云端首次预热：检测到空库，90 秒后自动执行一次流水线")
         scheduler.start()
-        print(f"[web] 定时任务已注册：每日 {daily}（本机时区）")
+        print(f"[web] 定时任务已注册：每日 {daily}（时区 {tz or '本机'}）")
     yield
     scheduler.shutdown(wait=False)
 
