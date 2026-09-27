@@ -64,6 +64,13 @@ async function loadOverview() {
   const snap = d.snapshot;
   const pill = document.getElementById("run-pill");
   pill.innerHTML = statusBadge(snap.status);
+  // 公开只读模式：隐藏触发按钮（系统按每日 08:30 定时自动运行）
+  if (snap.readonly) {
+    document.getElementById("btn-trigger").style.display = "none";
+    document.getElementById("trigger-mq").style.display = "none";
+    document.getElementById("run-live").innerHTML =
+      '<span class="muted">🔒 公开只读模式 · 由系统每日 08:30（北京时间）自动运行</span>';
+  }
   const det = document.getElementById("run-detail");
   if (d.latest_run && d.latest_run.id) {
     det.innerHTML =
@@ -77,13 +84,15 @@ async function loadOverview() {
     det.innerHTML = `<span class="muted">还没有运行记录</span>`;
   }
 
-  // 运行中轮询
+  // 运行中轮询（只读模式跳过）
   const live = document.getElementById("run-live");
-  if (snap.status === "running") {
-    live.innerHTML = `<span class="badge running pulse">● 运行中，开始于 ${snap.started_at}</span>`;
-    setTimeout(loadOverview, 5000);
-  } else {
-    live.innerHTML = "";
+  if (!snap.readonly) {
+    if (snap.status === "running") {
+      live.innerHTML = `<span class="badge running pulse">● 运行中，开始于 ${snap.started_at}</span>`;
+      setTimeout(loadOverview, 5000);
+    } else {
+      live.innerHTML = "";
+    }
   }
 
   // 日报列表

@@ -444,7 +444,7 @@ def api_overview():
             "cost_series": cost_series,
             "recent_runs": recent,
             "reports": reports[:10],
-            "snapshot": manager.snapshot(),
+            "snapshot": {**manager.snapshot(), "readonly": READONLY},
         }
     )
 

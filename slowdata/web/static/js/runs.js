@@ -42,6 +42,14 @@ async function loadCharts() {
   renderCharts(latest);
   const pill = document.getElementById("live-pill");
   pill.innerHTML = statusBadge(d.snapshot.status);
+  // 公开只读模式：隐藏触发控件
+  if (d.snapshot.readonly) {
+    document.getElementById("trigger-mq").style.display = "none";
+    document.getElementById("btn-trigger").style.display = "none";
+    document.getElementById("run-live").innerHTML =
+      '<span class="muted">🔒 公开只读模式 · 由系统每日 08:30（北京时间）自动运行</span>';
+    return;
+  }
   const live = document.getElementById("run-live");
   if (d.snapshot.status === "running") {
     live.innerHTML = `<span class="badge running pulse">● 运行中 ${d.snapshot.started_at}</span>`;
