@@ -49,21 +49,41 @@
 
 ```mermaid
 flowchart LR
-    subgraph 信源层
-        T[Tavily] & O[OpenAlex] & G[GitHub] & H[HuggingFace] & R[RSS]
+    SRC["信源层<br/>Tavily · OpenAlex<br/>GitHub · HuggingFace · RSS"]
+
+    subgraph PIPE["LangGraph · 日度流水线"]
+        direction LR
+        A["① 查询与采集<br/>查询生成 → 并行收集<br/>初筛分类 · 时间窗过滤<br/>网页正文抓取"]
+        B["② 去重与核验<br/>语义去重 · 跨天比对<br/>摘要 + 实体<br/>Claim 核验 · 矛盾裁决"]
+        C["③ 分析与综合<br/>事件提取<br/>趋势综合<br/>数据方针"]
+        CR{"④ Critic<br/>五维评审"}
+        RS["定向回搜<br/>最多 2 轮"]
+        RP["⑤ 日报渲染"]
+
+        A --> B --> C --> CR
+        CR -->|"通过 / 达上限"| RP
+        CR -->|"未达标"| RS
+        RS -.->|"返回语义去重"| B
     end
-    subgraph 流水线["LangGraph 日度流水线"]
-        direction TB
-        Q[查询生成] --> C[并行收集] --> TR[初筛分类<br/>时间窗过滤] --> F[网页正文抓取]
-        F --> D[语义去重<br/>跨天比对] --> S[摘要+实体] --> V[Claim 核验<br/>矛盾裁决]
-        V --> E[事件提取] --> SY[趋势综合] --> P[数据方针]
-        P --> CR{Critic 五维评审}
-        CR -- 未达标≤2轮 --> RS[定向回搜] --> D
-        CR -- 通过/达上限 --> RP[日报渲染]
-    end
-    T & O & G & H & R --> C
-    RP --> DB[(SQLite<br/>items/claims/entities/events)]
-    DB --> W[Web 看板 FastAPI+ECharts]
+
+    SRC --> A
+    RP --> DB[("SQLite<br/>items / claims<br/>entities / events")]
+    DB --> W["Web 看板<br/>FastAPI + ECharts"]
+
+    classDef source fill:#F1F5F9,stroke:#64748B,color:#0F172A
+    classDef process fill:#EFF6FF,stroke:#3B82F6,color:#1E3A8A
+    classDef review fill:#FFF7ED,stroke:#F59E0B,color:#92400E
+    classDef retry fill:#FFF1F2,stroke:#FB7185,color:#9F1239
+    classDef output fill:#ECFDF5,stroke:#10B981,color:#065F46
+
+    class SRC source
+    class A,B,C process
+    class CR review
+    class RS retry
+    class RP,DB,W output
+
+    style PIPE fill:#F8FAFC,stroke:#CBD5E1,color:#334155
+    linkStyle default stroke:#94A3B8,stroke-width:1.5px
 ```
 
 ### 模型分层
